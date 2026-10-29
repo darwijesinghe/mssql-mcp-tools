@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "mssql-mcp-tools": {
+      "command": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "/absolute/path/to/Mcp.Server/Mcp.Server.csproj"
+      ]
+    }
+  }
+}

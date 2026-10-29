@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <RunConfiguration>
+    <TargetFrameworkVersion>net9.0</TargetFrameworkVersion>
+  </RunConfiguration>
+
+  <TestRunParameters>
+    <Parameter name="DbConnectionString" value="Server=YOUR_SERVER;Database=YOUR_DATABASE;User Id=YOUR_USER;Password=YOUR_PASSWORD;TrustServerCertificate=True;" />
+    <Parameter name="RunIntegrationTests" value="true" />
+  </TestRunParameters>
+</RunSettings>

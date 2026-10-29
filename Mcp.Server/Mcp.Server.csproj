@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <RootNamespace>Mcp.Server</RootNamespace>
+    <AssemblyName>mssql-mcp-tools</AssemblyName>
+    <Product>MssqlMcpTools</Product>
+    <Company>MssqlMcpTools</Company>
+    <AssemblyTitle>MssqlMcpTools</AssemblyTitle>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.9" />
+    <PackageReference Include="Microsoft.SqlServer.TransactSql.ScriptDom" Version="180.18.1" />
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="10.0.0" />
+    <PackageReference Include="Serilog.Settings.Configuration" Version="10.0.1" />
+    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

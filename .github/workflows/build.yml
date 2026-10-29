@@ -1,0 +1,35 @@
+name: Build
+
+on:
+  pull_request:
+    branches:
+      - dev
+      - main
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          # CI SDK. global.json selects Microsoft.Testing.Platform and does not pin an SDK. The app targets net9.0.
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore Mcp.sln
+
+      - name: Build
+        run: dotnet build Mcp.sln --configuration Release --no-restore
+
+      # Integration tests need a live SQL Server; skip them in CI.
+      - name: Test (exclude integration)
+        run: >
+          dotnet test --solution Mcp.sln
+          --configuration Release
+          --no-build
+          --verbosity normal
+          --filter "TestCategory!=Integration"

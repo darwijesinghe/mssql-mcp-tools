@@ -1,0 +1,176 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          # CI SDK. global.json selects Microsoft.Testing.Platform and does not pin an SDK. The app targets net9.0.
+          dotnet-version: "10.0.x"
+
+      # Integration tests need a live SQL Server; skip them in CI
+      - name: Run tests (exclude integration)
+        run: >
+          dotnet test --solution Mcp.sln
+          -c Release
+          --filter "TestCategory!=Integration"
+
+  publish:
+    needs: test
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - rid: win-x64
+            os: windows-latest
+            archive: mssql-mcp-tools-win-x64.zip
+          - rid: linux-x64
+            os: ubuntu-latest
+            archive: mssql-mcp-tools-linux-x64.tar.gz
+          - rid: osx-arm64
+            os: macos-latest
+            archive: mssql-mcp-tools-osx-arm64.tar.gz
+          - rid: osx-x64
+            os: macos-latest
+            archive: mssql-mcp-tools-osx-x64.tar.gz
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          # CI SDK. global.json selects Microsoft.Testing.Platform and does not pin an SDK.
+          # The app targets net9.0
+          dotnet-version: "10.0.x"
+
+      - name: Publish (self-contained single-file)
+        run: >
+          dotnet publish Mcp.Server/Mcp.Server.csproj
+          -c Release
+          -r ${{ matrix.rid }}
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -o ./artifacts/${{ matrix.rid }}
+
+      - name: Make binary executable (Unix)
+        if: runner.os != 'Windows'
+        run: chmod +x ./artifacts/${{ matrix.rid }}/mssql-mcp-tools
+
+      - name: Create zip (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: >
+          Compress-Archive
+          -Path ./artifacts/${{ matrix.rid }}/*
+          -DestinationPath ./${{ matrix.archive }}
+          -Force
+
+      - name: Create tarball (Unix)
+        if: runner.os != 'Windows'
+        run: >
+          tar -czf ./${{ matrix.archive }}
+          -C ./artifacts/${{ matrix.rid }}
+          .
+
+      - name: Upload archive artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.rid }}
+          path: ./${{ matrix.archive }}
+          if-no-files-found: error
+
+  release:
+    needs: publish
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download all archives
+        uses: actions/download-artifact@v4
+        with:
+          path: ./dist
+          merge-multiple: true
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ./dist/mssql-mcp-tools-win-x64.zip
+            ./dist/mssql-mcp-tools-linux-x64.tar.gz
+            ./dist/mssql-mcp-tools-osx-arm64.tar.gz
+            ./dist/mssql-mcp-tools-osx-x64.tar.gz
+          generate_release_notes: true
+
+  # Publishes launcher/ after the GitHub Release assets exist
+  # npmjs.com trusted publisher: user darwijesinghe, repository mssql-mcp-tools,
+  # workflow filename release.yml, allow npm publish
+  npm:
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+          package-manager-cache: false
+
+      # Tag v1.2.3 becomes package version 1.2.3 and RELEASE_TAG v1.2.3
+      # The checkout is not committed
+      - name: Set launcher version from tag
+        working-directory: launcher
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const tag = process.env.RELEASE_TAG || '';
+          if (!/^v\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(tag)) {
+            console.error('Tag must look like v1.2.3');
+            process.exit(1);
+          }
+          const version = tag.slice(1);
+          const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          pkg.version = version;
+          fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          const binPath = 'bin.js';
+          const bin = fs.readFileSync(binPath, 'utf8');
+          const marker = "const RELEASE_TAG = '";
+          const start = bin.indexOf(marker);
+          const end = start < 0 ? -1 : bin.indexOf("';", start + marker.length);
+          if (start < 0 || end < 0) {
+            console.error('RELEASE_TAG assignment not found');
+            process.exit(1);
+          }
+          fs.writeFileSync(binPath, bin.slice(0, start) + marker + tag + bin.slice(end));
+          console.log('launcher ' + version + ' installs ' + tag);
+          NODE
+
+      - name: Publish to npm
+        working-directory: launcher
+        run: npm publish --access public

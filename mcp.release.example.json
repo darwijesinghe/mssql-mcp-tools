@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "mssql-mcp-tools": {
+      "command": "C:/absolute/path/to/mssql-mcp-tools.exe"
+    }
+  }
+}

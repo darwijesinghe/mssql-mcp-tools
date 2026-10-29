@@ -1,0 +1,49 @@
+## Build results
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+## Visual Studio / Rider
+.vs/
+*.user
+*.userosscache
+*.suo
+*.sln.docstates
+.idea/
+
+## Publish output (local)
+publish/
+MssqlMcpTools/publish/
+
+## Launcher
+launcher/node_modules/
+
+## NuGet
+*.nupkg
+*.snupkg
+**/packages/*
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+## OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+## Secrets and local config (never commit)
+.env
+.env.*
+*.secrets.json
+appsettings.local.json
+appsettings.*.local.json
+**/mcp.json
+**/.runsettings
+
+## Local Visual Studio publish profiles (machine-specific paths)
+**/Properties/PublishProfiles/
+
+## Logs
+*.log
+mssql-mcp-tools.log

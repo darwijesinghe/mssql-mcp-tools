@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "mssql-mcp-tools": {
+      "command": "npx",
+      "args": ["-y", "mssql-mcp-tools"]
+    }
+  }
+}
