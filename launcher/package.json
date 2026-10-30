@@ -1,8 +1,16 @@
 {
   "name": "mssql-mcp-tools",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Downloads and starts MssqlMcpTools, the read-only MSSQL MCP server, for the current operating system.",
+  "author": {
+    "name": "Darshana Wijesinghe",
+    "email": "dar.dev.mail@gmail.com",
+    "url": "https://github.com/darwijesinghe"
+  },
   "keywords": [
+    "csharp",
+    "dotnet",
+    "database",
     "mcp",
     "model-context-protocol",
     "mssql",
@@ -24,5 +32,9 @@
     "type": "git",
     "url": "git+https://github.com/darwijesinghe/mssql-mcp-tools.git",
     "directory": "launcher"
+  },
+  "homepage": "https://github.com/darwijesinghe/mssql-mcp-tools#readme",
+  "bugs": {
+    "url": "https://github.com/darwijesinghe/mssql-mcp-tools/issues"
   }
 }
